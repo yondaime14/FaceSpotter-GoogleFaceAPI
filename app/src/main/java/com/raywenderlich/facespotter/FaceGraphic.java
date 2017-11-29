@@ -33,13 +33,14 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
 
 import com.google.android.gms.vision.face.Face;
 import com.raywenderlich.facespotter.ui.camera.GraphicOverlay;
 
 
-class FaceGraphic extends GraphicOverlay.Graphic {
+public class FaceGraphic extends GraphicOverlay.Graphic {
 
   private static final String TAG = "FaceGraphic";
 
@@ -51,7 +52,7 @@ class FaceGraphic extends GraphicOverlay.Graphic {
   // This variable may be written to by one of many threads. By declaring it as volatile,
   // we guarantee that when we read its contents, we're reading the most recent "write"
   // by any thread.
-  private volatile Face mFace;
+  private volatile FaceData mFaceData;
 
   private Paint mHintTextPaint;
   private Paint mHintOutlinePaint;
@@ -109,9 +110,69 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     mEyelidPaint.setStyle(Paint.Style.FILL);
   }
 
-  @Override
-  public void draw(Canvas canvas) {
-
+  public void update(FaceData faceData) {
+    mFaceData = faceData;
+    postInvalidate(); //triggers a redraw of graphic (i.e cause draw() to be called)
   }
+
+    @Override
+    public void draw(Canvas canvas) {
+        final float DOT_RADIUS = 3.0f;
+        final float TEXT_OFFSET_Y = -30.0f;
+
+        // Confirm that the face and its features are still visible before drawing any graphics over it.
+        if (mFaceData == null) {
+            return;
+        }
+
+        // 1
+        PointF detectPosition = mFaceData.getPosition();
+        PointF detectLeftEyePosition = mFaceData.getLeftEyePosition();
+        PointF detectRightEyePosition = mFaceData.getRightEyePosition();
+        PointF detectNoseBasePosition = mFaceData.getNoseBasePosition();
+        PointF detectMouthLeftPosition = mFaceData.getMouthLeftPosition();
+        PointF detectMouthBottomPosition = mFaceData.getMouthBottomPosition();
+        PointF detectMouthRightPosition = mFaceData.getMouthRightPosition();
+        if ((detectPosition == null) ||
+                (detectLeftEyePosition == null) ||
+                (detectRightEyePosition == null) ||
+                (detectNoseBasePosition == null) ||
+                (detectMouthLeftPosition == null) ||
+                (detectMouthBottomPosition == null) ||
+                (detectMouthRightPosition == null)) {
+            return;
+        }
+
+        // 2
+        float leftEyeX = translateX(detectLeftEyePosition.x);
+        float leftEyeY = translateY(detectLeftEyePosition.y);
+        canvas.drawCircle(leftEyeX, leftEyeY, DOT_RADIUS, mHintOutlinePaint);
+        canvas.drawText("left eye", leftEyeX, leftEyeY + TEXT_OFFSET_Y, mHintTextPaint);
+
+        float rightEyeX = translateX(detectRightEyePosition.x);
+        float rightEyeY = translateY(detectRightEyePosition.y);
+        canvas.drawCircle(rightEyeX, rightEyeY, DOT_RADIUS, mHintOutlinePaint);
+        canvas.drawText("right eye", rightEyeX, rightEyeY + TEXT_OFFSET_Y, mHintTextPaint);
+
+        float noseBaseX = translateX(detectNoseBasePosition.x);
+        float noseBaseY = translateY(detectNoseBasePosition.y);
+        canvas.drawCircle(noseBaseX, noseBaseY, DOT_RADIUS, mHintOutlinePaint);
+        canvas.drawText("nose base", noseBaseX, noseBaseY + TEXT_OFFSET_Y, mHintTextPaint);
+
+        float mouthLeftX = translateX(detectMouthLeftPosition.x);
+        float mouthLeftY = translateY(detectMouthLeftPosition.y);
+        canvas.drawCircle(mouthLeftX, mouthLeftY, DOT_RADIUS, mHintOutlinePaint);
+        canvas.drawText("mouth left", mouthLeftX, mouthLeftY + TEXT_OFFSET_Y, mHintTextPaint);
+
+        float mouthRightX = translateX(detectMouthRightPosition.x);
+        float mouthRightY = translateY(detectMouthRightPosition.y);
+        canvas.drawCircle(mouthRightX, mouthRightY, DOT_RADIUS, mHintOutlinePaint);
+        canvas.drawText("mouth right", mouthRightX, mouthRightY + TEXT_OFFSET_Y, mHintTextPaint);
+
+        float mouthBottomX = translateX(detectMouthBottomPosition.x);
+        float mouthBottomY = translateY(detectMouthBottomPosition.y);
+        canvas.drawCircle(mouthBottomX, mouthBottomY, DOT_RADIUS, mHintOutlinePaint);
+        canvas.drawText("mouth bottom", mouthBottomX, mouthBottomY + TEXT_OFFSET_Y, mHintTextPaint);
+    }
 
 }

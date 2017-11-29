@@ -59,6 +59,7 @@ import com.raywenderlich.facespotter.ui.camera.CameraSourcePreview;
 import com.raywenderlich.facespotter.ui.camera.GraphicOverlay;
 
 import java.io.IOException;
+import java.util.List;
 
 
 public final class FaceActivity extends AppCompatActivity {
@@ -225,8 +226,8 @@ public final class FaceActivity extends AppCompatActivity {
     // 3
     mCameraSource = new CameraSource.Builder(context, detector)
       .setFacing(facing)
-      .setRequestedPreviewSize(320, 240)
-      .setRequestedFps(60.0f)
+      .setRequestedPreviewSize(1280, 960)
+      .setRequestedFps(90.0f)
       .setAutoFocusEnabled(true)
       .build();
   }

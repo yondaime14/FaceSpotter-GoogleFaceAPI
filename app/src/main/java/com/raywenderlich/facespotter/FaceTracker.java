@@ -32,6 +32,7 @@ package com.raywenderlich.facespotter;
 import android.content.Context;
 import android.graphics.PointF;
 
+import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
@@ -96,4 +97,45 @@ class FaceTracker extends Tracker<Face> {
       mPreviousLandmarkPositions.put(landmark.getType(), new PointF(xProp, yProp));
     }
   }
+
+  @Override
+  public void onNewItem(int i, Face face) {
+    mFaceGraphic = new FaceGraphic(mOverlay, mContext, mIsFrontFacing);
+  }
+
+  @Override
+  public void onUpdate(Detector.Detections<Face> detections, Face face) {
+    mOverlay.add(mFaceGraphic);
+      // Get face dimensions.
+      mFaceData.setPosition(face.getPosition());
+      mFaceData.setWidth(face.getWidth());
+      mFaceData.setHeight(face.getHeight());
+
+      // Get the positions of facial landmarks.
+      updatePreviousLandmarkPositions(face);
+      mFaceData.setLeftEyePosition(getLandmarkPosition(face, Landmark.LEFT_EYE));
+      mFaceData.setRightEyePosition(getLandmarkPosition(face, Landmark.RIGHT_EYE));
+      mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.LEFT_CHEEK));
+      mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.RIGHT_CHEEK));
+      mFaceData.setNoseBasePosition(getLandmarkPosition(face, Landmark.NOSE_BASE));
+      mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.LEFT_EAR));
+      mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.LEFT_EAR_TIP));
+      mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.RIGHT_EAR));
+      mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.RIGHT_EAR_TIP));
+      mFaceData.setMouthLeftPosition(getLandmarkPosition(face, Landmark.LEFT_MOUTH));
+      mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.BOTTOM_MOUTH));
+      mFaceData.setMouthRightPosition(getLandmarkPosition(face, Landmark.RIGHT_MOUTH));
+
+      mFaceGraphic.update(mFaceData);
+  }
+
+    @Override
+    public void onMissing(Detector.Detections<Face> detections) {
+        mOverlay.remove(mFaceGraphic);
+    }
+
+    @Override
+    public void onDone() {
+        mOverlay.remove(mFaceGraphic);
+    }
 }
