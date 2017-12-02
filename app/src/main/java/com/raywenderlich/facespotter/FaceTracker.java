@@ -35,7 +35,6 @@ import android.graphics.PointF;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
-import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.Landmark;
 import com.raywenderlich.facespotter.ui.camera.GraphicOverlay;
 
@@ -51,6 +50,11 @@ class FaceTracker extends Tracker<Face> {
   private boolean mIsFrontFacing;
   private FaceGraphic mFaceGraphic;
   private FaceData mFaceData;
+
+  //Trck eye open probability
+  private boolean mPreviousisLeftEyeOpen = true;
+  private boolean mPreviousisRightEyeOpen = true;
+
 
   // Subjects may move too quickly to for the system to detect their detect features,
   // or they may move so their features are out of the tracker's detection range.
@@ -106,6 +110,8 @@ class FaceTracker extends Tracker<Face> {
   @Override
   public void onUpdate(Detector.Detections<Face> detections, Face face) {
     mOverlay.add(mFaceGraphic);
+    updatePreviousLandmarkPositions(face);
+
       // Get face dimensions.
       mFaceData.setPosition(face.getPosition());
       mFaceData.setWidth(face.getWidth());
@@ -125,6 +131,29 @@ class FaceTracker extends Tracker<Face> {
       mFaceData.setMouthLeftPosition(getLandmarkPosition(face, Landmark.LEFT_MOUTH));
       mFaceData.setMouthBottomPosition(getLandmarkPosition(face, Landmark.BOTTOM_MOUTH));
       mFaceData.setMouthRightPosition(getLandmarkPosition(face, Landmark.RIGHT_MOUTH));
+
+
+      //Calculate the probability to see if eyes are open
+      final float EYE_CLOSED_Threshold = 0.4f;
+      float leftEyeOpenScore = face.getIsLeftEyeOpenProbability();
+      if (leftEyeOpenScore == Face.UNCOMPUTED_PROBABILITY) {
+          mFaceData.setLeftEyeOpen(mPreviousisLeftEyeOpen);
+      } else {
+          mFaceData.setLeftEyeOpen(leftEyeOpenScore > EYE_CLOSED_Threshold);
+          mPreviousisLeftEyeOpen = mFaceData.isLeftEyeOpen();
+      }
+
+      float rightOpenScore = face.getIsRightEyeOpenProbability();
+      if (rightOpenScore == Face.UNCOMPUTED_PROBABILITY) {
+          mFaceData.setRightEyeOpen(mPreviousisRightEyeOpen);
+      } else {
+          mFaceData.setRightEyeOpen(rightOpenScore > EYE_CLOSED_Threshold);
+          mPreviousisRightEyeOpen = mFaceData.isRightEyeOpen();
+      }
+
+      //Get Smile probability
+      final float SMILING_THRESHOLD = 0.8f;
+      mFaceData.setSmiling(face.getIsSmilingProbability() > SMILING_THRESHOLD);
 
       mFaceGraphic.update(mFaceData);
   }
